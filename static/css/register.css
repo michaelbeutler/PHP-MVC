@@ -1,0 +1,52 @@
+body, html {
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+.register-container {
+    background-color: rgb(221, 221, 221);
+    margin-top: 10%;
+}
+.register-form-container {
+    padding: 30px;
+    padding-top: 40px;
+    background-color: rgb(221, 221, 221);
+    height: 100%;
+}
+.register-form-title {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+input.error {
+    border: 1px solid rgb(153, 55, 55);
+}
+.register-input-group-text {
+    background-color: rgb(94, 94, 255);
+    color: rgb(221, 221, 221);
+}
+.register-submit-btn {
+    border-color: rgb(94, 94, 255);
+    color: rgb(94, 94, 255);
+    padding-right: 20px;
+    padding-left: 20px;
+    position: absolute;
+    right: 30px;
+}
+.register-submit-btn:hover {
+    border-color: rgb(94, 94, 255);
+    background-color: rgb(94, 94, 255);
+    color: rgb(221, 221, 221);
+}
+.register-info {
+    position: absolute;
+    bottom: 0;
+    right: 30px;
+    padding: 30px;
+    text-align: center;
+}
+.register-error-msg {
+    color: rgb(153, 55, 55);
+}
