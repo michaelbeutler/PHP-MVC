@@ -15,12 +15,17 @@ class Router {
         // params
         $queryParams = $url;
 
-        $dispatch = new $controller($controller_name, $action);
-
+        if (class_exists($controller)) {
+            $dispatch = new $controller($controller_name, $action);
+        } else {
+            die('Invalid Route');
+        }
+        
         if (method_exists($controller, $action)) {
             call_user_func_array([$dispatch, $action], $queryParams);
         } else {
             die('The method <<b>' . $action . '</b>> does not exists in <<b>' . $controller_name . '</b>>');
         }
+
     }
 }
