@@ -8,12 +8,10 @@ class Login extends Controller
 
     public function indexAction()
     {
-        $this->view->render('login/login');
-    }
-
-    public function loginAction() {
+        $email = '';
         if ($_POST) {
             $user = $this->UserModel->findByEmail($_POST['email']);
+            $email = $_POST['email'];
         }
         $this->view->render('login/login');
     }
