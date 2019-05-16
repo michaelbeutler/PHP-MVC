@@ -1,19 +1,20 @@
 <?php
 class Controller extends Application {
     protected $_controller, $_action;
-    public $view, $db;
+    public $view;
 
 
     public function __construct($controller, $action) {
         parent::__construct();
         $this->_controller = $controller;
         $this->_action = $action;
-        $this->db = new Database();
         $this->view = new View();
     }
 
-    public function load_model (Type $var = null)
+    public function load_model ($model)
     {
-        # code...
+        if (class_exists($model)) {
+            $this->{$model.'Model'} = new $model(strtolower($model));
+        }
     }
 }
