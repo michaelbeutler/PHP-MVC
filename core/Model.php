@@ -43,7 +43,9 @@ class Model
     {
         $resultsQuery = $this->_db->findFirst($this->_table, $params);
         $result = new $this->_modelName($this->_table);
-        $result->populateObjData($resultsQuery);
+        if ($resultsQuery) {
+            $result->populateObjData($resultsQuery);
+        }
         return $result;
     }
 
