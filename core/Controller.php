@@ -12,8 +12,10 @@ class Controller extends Application {
         $this->view = new View();
     }
 
-    public function load_model (Type $var = null)
+    protected function load_model ($model)
     {
-        # code...
+        if (class_exists($model)) {
+            $this->{$model . 'Model'} = new $model(strtolower($model));
+        }
     }
 }
