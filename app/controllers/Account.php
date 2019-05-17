@@ -19,7 +19,8 @@ class Account extends Controller
             $validation->check($_POST, [
                 'email' => [
                     'display' => "Username",
-                    'required' => true
+                    'required' => true,
+                    'valid_email' => true
                 ],
                 'password' => [
                     'password' => "Password",
@@ -35,6 +36,7 @@ class Account extends Controller
                 }
             }
         }
+        $this->view->displayErrors = $validation->display_errors();
         $this->view->render('account/login');
     }
 
