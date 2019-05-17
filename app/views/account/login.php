@@ -52,7 +52,7 @@
             </div>
             <div class="col">
                 <div class="login-form-container">
-                    <form action="<?= PROOT ?>/account/login" id="formLogin" method="post">
+                    <form action="<?= PROOT ?>account/login" id="formLogin" method="post">
                         <div class="row">
                             <div class="col">
                                 <h3 class="login-form-title"><i class="fas fa-user-lock"></i><br><b>Sign In</b>
@@ -90,6 +90,7 @@
                             </div>
                         </div>
                         <small class="login-error-msg">
+                            <?=$this->display_errors ?>
                         </small>
                         <br>
                         <br>
@@ -145,5 +146,5 @@
 <script src="<?= PROOT ?>/static/dist/js/jquery.validate.min.js"></script>
 <!-- App JS -->
 <script src="<?= PROOT ?>/static/dist/js/sha512.min.js"></script>
-<script src="<?= PROOT ?>/static/js/login.js"></script>
+<!--<script src="<?= PROOT ?>/static/js/login.js"></script>-->
 <?php $this->end(); ?>

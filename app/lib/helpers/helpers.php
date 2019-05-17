@@ -10,3 +10,8 @@ function dnd($data) {
 function sanitize($value) {
     return htmlentities($value, ENT_QUOTES, 'UTF-8');
 }
+
+function currentUser()
+{
+    return User::currentLoggedInUser();
+}

@@ -19,7 +19,7 @@ class Validate
                 if ($rule === 'required' && empty($value)) {
                     $this->addError(["{$display} is required.", $item]);
                 } elseif (!empty($value)) {
-                    switch ($$rule) {
+                    switch ($rule) {
                         case 'minlength':
                             if (strlen($value) < $rule_value) {
                                 $this->addError(["{$display} must be a minimum of {$rule_value} characters.", $item]);
@@ -75,6 +75,11 @@ class Validate
                 }
             }
         }
+
+        if (empty($this->_errors)) {
+            $this->_passed = true;
+        }
+        return $this;
     }
 
     public function addError($error)
@@ -101,10 +106,14 @@ class Validate
     {
         $html = '<small class="error">';
         foreach ($this->_errors as $error) {
-            $html .= '<li class="error">' . $error[0] . '</li>';
-            $html .= '<script>jQuery("document").ready(function(){jQuery("#' . $error[1] . '").parent().closest("div").addClass("has-error");});</script>';
+            if (is_array($error)) {
+                $html .= '<li class="error">' . $error[0] . '</li>';
+                $html .= '<script>jQuery("document").ready(function(){jQuery("#' . $error[1] . '").parent().closest("div").addClass("has-error");});</script>';
+            } else {
+                $html .= '<li class="error">' . $error . '</li>';
+            }
         }
-        $html .= '</ul>';
+        $html .= '</small>';
         return $html;
     }
 }

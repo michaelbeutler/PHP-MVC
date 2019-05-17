@@ -7,7 +7,6 @@ class Index extends Controller
 
     public function indexAction()
     {
-        dnd($_SESSION);
         $this->view->render('index/index');
     }
 }
