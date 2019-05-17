@@ -52,7 +52,7 @@
                 </div>
                 <div class="col">
                     <div class="login-form-container">
-                        <form action="javascript:void" id="formLogin">
+                        <form action="login" id="formLogin" method="post">
                             <div class="row">
                                 <div class="col">
                                     <h3 class="login-form-title"><i class="fas fa-user-lock"></i><br><b>Sign In</b>
@@ -70,7 +70,7 @@
                                         </div>
                                         <input type="email" class="form-control" placeholder="user@example.com"
                                             aria-label="Your Email" aria-describedby="email-addon" name="email"
-                                            id="email">
+                                            id="email" value="<?php echo $email; ?>">
                                     </div>
                                 </div>
                             </div>
@@ -145,5 +145,5 @@
     <script src="<?=PROOT?>/static/dist/js/jquery.validate.min.js"></script>
     <!-- App JS -->
     <script src="<?=PROOT?>/static/dist/js/sha512.min.js"></script>
-    <!--<script src="<?=PROOT?>/static/js/login.js"></script>-->
+    <script src="<?=PROOT?>/static/js/login.js"></script>
 <?php $this->end(); ?>

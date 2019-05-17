@@ -1,0 +1,18 @@
+CREATE DATABASE IF NOT EXISTS `mvc`;
+USE `mvc`;
+CREATE TABLE IF NOT EXISTS `user` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(40) NOT NULL,
+    `password` VARCHAR(500) NOT NULL,
+    `create_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_date` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+);
+CREATE TABLE IF NOT EXISTS `user_session` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `user_id` INT NOT NULL,
+    `session` VARCHAR(255) NOT NULL,
+    `user_agent` VARCHAR(255) NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
+);

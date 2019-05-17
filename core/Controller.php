@@ -8,7 +8,6 @@ class Controller extends Application {
         parent::__construct();
         $this->_controller = $controller;
         $this->_action = $action;
-        $this->db = new Database();
         $this->view = new View();
     }
 
