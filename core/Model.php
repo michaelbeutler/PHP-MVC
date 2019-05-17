@@ -16,6 +16,7 @@ class Model
     {
         $columns = $this->get_columns();
         foreach ($columns as $column) {
+            $columnName = $column->Field;
             $this->_columnNames[] = $column->Field;
             $this->{$columnName} = null;
         }
@@ -30,7 +31,7 @@ class Model
     {
         $results = [];
         $resultsQuery = $this->_db->find($this->_table, $params);
-        foreach ($resultsQuery as $result => $value) {
+        foreach ($resultsQuery as $result) {
             $obj = new $this->_modelName($this->_table);
             $obj->populateObjData($result);
             $results[] = $obj;

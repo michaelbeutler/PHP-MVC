@@ -11,6 +11,8 @@ define('SITE_TITLE', 'MVC Framework'); // site title
 define('DATABASE_HOSTNAME', '127.0.0.1');
 define('DATABASE_USERNAME', 'root');
 define('DATABASE_PASSWORD', '');
-define('DATABASE_DATABASE', 'vac_manager');
+define('DATABASE_DATABASE', 'mvc');
 
-define('CURRENT_USER_SESSION_NAME', 'phpmvc');
+define('CURRENT_USER_SESSION_NAME', 'BVZtoJdaIFtTCCcpPigR');
+define('REMEMBER_COOKIE_NAME', 'sAyMBEzWCbREXEOxLJJu');
+define('REMEMBER_COOKIE_EXPIRY', 604800); // 30 days

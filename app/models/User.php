@@ -2,6 +2,7 @@
 class User extends Model
 {
     private $_isLoggedIn, $_sessionName, $_cookieName;
+    public static $currentLoggedInUser = null;
 
     public $id;
     public $email;
@@ -12,37 +13,39 @@ class User extends Model
     public function __construct($user = false)
     {
         $table = 'user';
+        parent::__construct($table);
         $this->_sessionName = CURRENT_USER_SESSION_NAME;
-        //$this->_cookieName = REMEBER_ME_COOKIE_NAME;
-        if ($user != false) {
+        $this->_cookieName = REMEMBER_COOKIE_NAME;
+        $this->_softDelete = true;
+        if ($user != '') {
             if (is_int($user)) {
-                // by id
-                $result = $this->_db->select('SELECT * FROM `user` WHERE `id`=' . $user . ';');
-                echo $result;
-                if ($result != false) { }
-            } else if (is_string($user)) {
-                // by email
+                $u = $this->_db->findFirst($table, ['conditions' => 'id = ?', 'bind' => [$user]]);
+            } else {
+                $u = $this->_db->findFirst($table, ['conditions' => 'email = ?', 'bind' => [$user]]);
+            }
+            if ($u) {
+                foreach ($u as $key => $value) {
+                    $this->$key = $value;
+                }
             }
         }
     }
 
     public function findByEmail($email)
     {
-        return $this->_db->select($this->_db->select("SELECT * FROM `user` WHERE `email`='" . $email . "' LIMIT 1;"));
+        return $this->findFirst(['conditions' => 'email = ?', 'bind' => [$email]]);
     }
 
-    public function login($email, $password)
+    public function login($rememberMe = false)
     {
-        $result = $this->_db->select("SELECT `id`, `email`, `password` FROM `user` WHERE `email`='" . $email . "' LIMIT 1;");
-        if ($result->num_rows == 1) {
-            if ($row = $result->fetch_assoc()) {
-                if (password_verify($password, $row['password'])) {
-                    Session::set($this->sessionName, $this->id);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
+        Session::set($this->_sessionName, $this->id);
+        if ($rememberMe) {
+            $hash = md5(uniqid() + rand(0, 100));
+            $user_agent = Session::uagent_no_version();
+            Cookie::set($this->_cookieName, $hash, REMEMBER_COOKIE_EXPIRY);
+            $fields = ['session' => $hash, 'user_agent' => $user_agent, 'user_id' => $this->id];
+            $this->_db->query("DELETE FROM `user_session` WHERE `user_id` = ? AND `user_agent`= ?", [$this->id, $user_agent]);
+            $this->_db->insert('user_session', $fields);
         }
     }
 }
