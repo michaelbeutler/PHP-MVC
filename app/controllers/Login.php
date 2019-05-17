@@ -10,8 +10,7 @@ class Login extends Controller
     {
         $email = '';
         if ($_POST) {
-            $user = $this->UserModel->findByEmail($_POST['email']);
-            $email = $_POST['email'];
+            $user = $this->UserModel;
         }
         $this->view->render('login/login');
     }

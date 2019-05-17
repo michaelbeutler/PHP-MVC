@@ -1,148 +1,189 @@
 <?php
 class Database
 {
-    private $conn = null;
-    private function open()
+    private static $_instance = null;
+    private $_pdo, $_query, $_error = false, $_result, $_count = 0, $_lastInsertID = null;
+
+    private function __construct()
     {
-        // Create connection
-        $this->conn = new mysqli(DATABASE_HOSTNAME, DATABASE_USERNAME, DATABASE_PASSWORD, DATABASE_DATABASE);
-        // Check connection
-        if ($this->conn->connect_error) {
-            return "failed to connect to MySQL: (" . $this->conn->connect_errno . ") " . $this->conn->connect_error;
-        } else {
-            return true;
+        try {
+            $this->_pdo = new PDO('mysql:host=' . DATABASE_HOSTNAME . ';dbname=' . DATABASE_DATABASE, DATABASE_USERNAME, DATABASE_PASSWORD);
+        } catch (PDOException $e) {
+            die($e->getMessage());
         }
     }
-    private function close()
+
+    public static function getInstance()
     {
-        if ($this->conn !== null) {
-            return $this->conn->close();
-        } else {
-            return false;
+        if (!isset(self::$_instance)) {
+            self::$_instance = new Database();
         }
+        return self::$_instance;
     }
-    public function select($query)
+
+    public function query($sql, $params = [])
     {
-        $this->open();
-        if ($result = $this->conn->query($query)) {
-            $this->close();
-            return $result;
-        } else {
-            throw new Exception($this->conn->error . '-----' . $query);
-            $this->close();
-            return false;
-        }
-    }
-    public function insert($table, $data, $format)
-    {
-        // Check for $table or $data not set
-        if (empty($table) || empty($data)) {
-            return false;
-        }
-        // Connect to the database
-        $this->open();
-        $db = $this->conn;
-        // Cast $data and $format to arrays
-        $data = (array)$data;
-        $format = (array)$format;
-        // Build format string
-        $format = implode('', $format);
-        $format = str_replace('%', '', $format);
-        list($fields, $placeholders, $values) = $this->prep_query($data);
-        // Prepend $format onto $values
-        array_unshift($values, $format);
-        // Prepary our query for binding
-        $stmt = $db->prepare("INSERT INTO {$table} ({$fields}) VALUES ({$placeholders})");
-        // Dynamically bind values
-        call_user_func_array(array($stmt, 'bind_param'), $this->ref_values($values));
-        // Execute the query
-        $stmt->execute();
-        // Check for successful insertion
-        if ($stmt->affected_rows) {
-            return true;
-        }
-        return false;
-    }
-    public function update($table, $data, $format, $where, $where_format)
-    {
-        // Check for $table or $data not set
-        if (empty($table) || empty($data)) {
-            return false;
-        }
-        // Connect to the database
-        $this->open();
-        $db = $this->conn;
-        // Cast $data and $format to arrays
-        $data = (array)$data;
-        $format = (array)$format;
-        // Build format array
-        $format = implode('', $format);
-        $format = str_replace('%', '', $format);
-        $where_format = implode('', $where_format);
-        $where_format = str_replace('%', '', $where_format);
-        $format .= $where_format;
-        list($fields, $placeholders, $values) = $this->prep_query($data, 'update');
-        //Format where clause
-        $where_clause = '';
-        $where_values = '';
-        $count = 0;
-        foreach ($where as $field => $value) {
-            if ($count > 0) {
-                $where_clause .= ' AND ';
+        $this->_error = false;
+        if ($this->_query = $this->_pdo->prepare($sql)) {
+            $x = 1;
+            if (count($params)) {
+                foreach ($params as $param) {
+                    $this->_query->bindValue($x, $param);
+                    $x++;
+                }
             }
-            $where_clause .= $field . '=?';
-            $where_values[] = $value;
-            $count++;
-        }
-        // Prepend $format onto $values
-        array_unshift($values, $format);
-        $values = array_merge($values, (array)$where_values);
-        // Prepary our query for binding
-        $stmt = $db->prepare("UPDATE {$table} SET {$placeholders} WHERE {$where_clause}");
-        // Dynamically bind values
-        call_user_func_array(array($stmt, 'bind_param'), $this->ref_values($values));
-        // Execute the query
-        $stmt->execute();
-        // Check for successful insertion
-        if ($stmt->affected_rows) {
-            return true;
-        }
-        return false;
-    }
-    public function delete($query)
-    {
-        $this->open();
-        $result = $this->conn->query($query);
-        $this->close();
-        return $result;
-    }
-    private function prep_query($data, $type = 'insert')
-    {
-        // Instantiate $fields and $placeholders for looping
-        $fields = '';
-        $placeholders = '';
-        $values = array();
-        // Loop through $data and build $fields, $placeholders, and $values			
-        foreach ($data as $field => $value) {
-            $fields .= "{$field},";
-            $values[] = $value;
-            if ($type == 'update') {
-                $placeholders .= $field . '=?,';
+
+            if ($this->_query->execute()) {
+                $this->_result = $this->_query->fetchALL(PDO::FETCH_OBJ);
+                $this->_count = $this->_query->rowCount();
+                $this->_lastInsertID = $this->_pdo->lastInsertId();
             } else {
-                $placeholders .= '?,';
+                $this->_error = true;
             }
         }
-        // Normalize $fields and $placeholders for inserting
-        $fields = substr($fields, 0, -1);
-        $placeholders = substr($placeholders, 0, -1);
-        return array($fields, $placeholders, $values);
+        return $this;
     }
-    private function ref_values($array)
+
+    protected function _read($table, $params = [])
     {
-        $refs = array();
-        foreach ($array as $key => $value) {
-            $refs[$key] = &$array[$key];
+        $conditionString = '';
+        $bind = [];
+        $order = '';
+        $limit = '';
+
+        // conditions
+        if (isset($params['conditions'])) {
+            if (is_array($params['conditions'])) {
+                foreach ($params['conditions'] as $condition) {
+                    $conditionString .= ' ' . $condition . ' AND';
+                }
+                $conditionString = trim($conditionString);
+                $conditionString = rtrim($conditionString, ' AND');
+            } else {
+                $conditionString = $params['conditions'];
+            }
+            if ($conditionString != '') {
+                $conditionString = ' WHERE ' . $conditionString;
+            }
         }
-        return $refs;
+
+        // bind
+        if (array_key_exists('bind', $params)) {
+            $bind = $params['bind'];
+        }
+
+        // order
+        if (array_key_exists('order', $params)) {
+            $order = ' ORDER BY ' . $params['order'];
+        }
+
+        // limit
+        if (array_key_exists('limit', $params)) {
+            $limit = ' LIMIT ' . $params['limit'];
+        }
+
+        $sql = "SELECT * FROM {$table}{$conditionString}{$order}{$limit}";
+        if ($this->query($sql, $bind)) {
+            if (!count($this->_result)) return false;
+            return true;
+        }
+        return false;
+    }
+
+    public function find($table, $params = [])
+    {
+        if ($this->_read($table, $params)) {
+            return $this->results();
+        }
+        return false;
+    }
+
+    public function findFirst($table, $params = [])
+    {
+        if ($this->_read($table, $params)) {
+            return $this->first();
+        }
+        return false;
+    }
+
+    public function insert($table, $fields = [])
+    {
+        $fieldString = '';
+        $valueString = '';
+        $values = [];
+
+        foreach ($fields as $field => $value) {
+            $fieldString .= '`' . $field . '`,';
+            $valueString .= '?,';
+            $values[] = $value;
+        }
+
+        $fieldString = rtrim($fieldString, ',');
+        $valueString = rtrim($valueString, ',');
+        $sql = "INSERT INTO `" . $table . "` ({$fieldString}) VALUES ({$valueString});";
+
+        if (!$this->query($sql, $values)->error()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function update($table, $id, $fields = [])
+    {
+        $fieldString = '';
+        $values = [];
+
+        foreach ($fields as $field => $value) {
+            $fieldString .= '`' . $field . '` = ?,';
+            $values[] = $value;
+        }
+
+        $fieldString = trim($fieldString);
+        $fieldString = rtrim($fieldString, ',');
+        $sql = "UPDATE `" . $table . "` SET {$fieldString} WHERE `id` = {$id};";
+
+        if (!$this->query($sql, $values)->error()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function delete($table, $id)
+    {
+        $sql = "DELETE FROM `" . $table . "` WHERE `id` = " . $id . ";";
+        if (!$this->query($sql)->error()) {
+            return true;
+        }
+        return false;
+    }
+
+    public function results()
+    {
+        return $this->_result;
+    }
+
+    public function first()
+    {
+        return (!empty($this->_result)) ? $this->_result[0] : [];
+    }
+
+    public function count()
+    {
+        return $this->_count;
+    }
+
+    public function lastID()
+    {
+        return $this->_lastInsertID;
+    }
+
+    public function get_columns($table)
+    {
+        return $this->query("SHOW COLUMNS FROM {$table}")->results();
+    }
+
+    public function error()
+    {
+        return $this->_error;
     }
 }
